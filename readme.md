@@ -1,6 +1,6 @@
 ## 描述
 
-MAL (mpu abstract layer) 是 rt-thread 官方基于 Memory Protect Unit (MPU) 做的一款用于内存保护的抽象层组件。
+MAL (mpu abstract layer) 是 rt-thread 官方基于 Memory Protect Unit (MPU) 做的一款用于内存保护的抽象层组件。MAL 组件代码位于 `stm32h750-artpi-h750/rt-thread/components/mal`
 
 ## 作用
 

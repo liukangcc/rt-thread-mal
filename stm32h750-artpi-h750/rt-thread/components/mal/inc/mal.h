@@ -1,0 +1,214 @@
+/*
+ * Copyright (c) 2006-2021, RT-Thread Development Team
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Change Logs:
+ * Date           Author       Notes
+ * 2021-11-26     liukang      the first version
+ */
+
+#ifndef __MAL_H__
+#define __MAL_H__
+
+#include <rtthread.h>
+#include <rthw.h>
+#include <string.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef RT_MPU_ALIGN_SMALLEST_SIZE
+#define RT_MPU_ALIGN_SMALLEST_SIZE     32                    /* mpu region smallest size */
+#else
+#if RT_MPU_ALIGN_SMALLEST_SIZE > 32
+#define RT_MPU_ALIGN_SMALLEST_SIZE     32
+#endif
+#endif
+
+#ifndef RT_MPU_THREAD_PROTECT_SIZE
+#define RT_MPU_THREAD_PROTECT_SIZE     32
+#endif
+
+/* region attribute 
+--------------------------------------------
+32 31 30 29 28 27 26 25 24 23 22 21 20 19 18
+|                   Reserved           |  |srd
+--------------------------------------------
+17 16 15 14 13 12 11 10          9          8          7 6 5 4        3 2 1 0
+                     |bufferable |cacheable |shareable |tex  |execute |permission
+--------------------------------------------
+*/
+#define REGION_PERMISSION_Pos          0U                               /* Data access permissions, allows you to configure read/write access for User and Privileged mode */
+#define REGION_PERMISSION_Msk          (0x7U << REGION_PERMISSION_Pos)
+
+#define REGION_EXECUTE_Pos             4U                               /* Instruction access disable bit */
+#define REGION_EXECUTE_Msk             (0x1U << REGION_EXECUTE_Pos)
+
+#define REGION_TEX_Pos                 5U                               /* Type extension field */
+#define REGION_TEX_Msk                 (0x7U << REGION_TEX_Pos)
+
+#define REGION_SHAREABLE_Pos           8U                               /* Region is shareable between multiple bus masters */
+#define REGION_SHAREABLE_Msk           (0x1U << REGION_SHAREABLE_Pos)
+
+#define REGION_CACHEABLE_Pos           9U                               /* Region is cacheable */
+#define REGION_CACHEABLE_Msk           (0x1U << REGION_CACHEABLE_Pos)
+
+#define REGION_BUFFERABLE_Pos          10U                               /* Region is bufferable */
+#define REGION_BUFFERABLE_Msk          (0x1U << REGION_BUFFERABLE_Pos)
+
+#define REGION_SRD_Pos                 11U                               /* Sub-region support */
+#define REGION_SRD_Msk                 (0xFFUL << REGION_SRD_Pos)
+
+#define RT_MPU_REGION_NO_ACCESS                          0x0U
+#define RT_MPU_REGION_PRIVILEGED_RW                      0x1U
+#define RT_MPU_REGION_PRIVILEGED_RW_UNPRIV_RO            0x2U
+#define RT_MPU_REGION_RW                                 0x3U
+#define RT_MPU_REGION_PRIVILEGED_RO                      0x5U
+#define RT_MPU_REGION_RO                                 0x6U
+
+#define RT_MPU_REGION_EXECUTE_ENABLE                     0x0U
+#define RT_MPU_REGION_EXECUTE_DISABLE                    0x1U
+
+#define RT_MPU_REGION_TEX_ENABLE                         0x1U
+#define RT_MPU_REGION_TEX_DISABLE                        0x0U
+
+#define RT_MPU_REGION_SHAREABLE_ENABLE                   0x1U
+#define RT_MPU_REGION_SHAREABLE_DISABLE                  0x0U
+
+#define RT_MPU_REGION_CACHEABLE_ENABLE                   0x1U
+#define RT_MPU_REGION_CACHEABLE_DISABLE                  0x0U
+
+#define RT_MPU_REGION_BUFFERABLE_ENABLE                  0x1U
+#define RT_MPU_REGION_BUFFERABLE_DISABLE                 0x0U
+
+#define RT_MPU_REGION_INVALID                            0x0U
+#define RT_MPU_REGION_VALID                              0x1U
+
+/* mpu region
+
+CORTEX-M3
+
+对于 cortex-m3，共有 8 个 region，系统配置占用 5 个，用户可配置区域为 1 个，保护区域 2 个
+
+| REGION | DESCRIPTION            |
+| ------ | ---------------------- |
+| 0      | FLASH                  |
+| 1      | INTERNAL SRAM          |
+| 2      | EXTERNAL SRAM          |
+| 3      | PRIPHERALS             |
+| 4      | THREAD STACK           |
+| 5      | USER CONFIGURABLE AREA |
+| 6      | PROTECT AREA1          |
+| 7      | PROTECT AREA2          |
+
+CORTEX-M4/M7
+
+对于 cortex-m4/m7，共有 16个 region，系统配置占用 5 个，用户可配置区域为 8 个，保护区域 2 个
+
+| REGION | DESCRIPTION             |
+| ------ | ----------------------- |
+| 0      | FLASH                   |
+| 1      | INTERNAL SRAM           |
+| 2      | EXTERNAL SRAM           |
+| 3      | PRIPHERALS              |
+| 4      | THREAD STACK            |
+| 5      | USER CONFIGURABLE AREA0 |
+| ...    | USER CONFIGURABLE AREAx |
+| 13     | USER CONFIGURABLE AREA8 |
+| 14     | PROTECT AREA1           |
+| 15     | PROTECT AREA2           |
+*/
+
+#define RT_MPU_FLASH_REGION                              0x0U            /* Flash memory region  */
+#define RT_MPU_INTERNAL_SRAM_REGION                      0x1U            /* Internal SRAM region */
+#define RT_MPU_EXTERNAL_SRAM_REGION                      0x2U            /* External SRAM region */
+#define RT_MPU_PRIPHERALS_REGION                         0x3U            /* Peripherals region   */
+#define RT_MPU_THREAD_STACK_REGION                       0x4U            /* Thread stack region  */
+#define RT_MPU_FIRST_CONFIGURABLE_REGION                 0x5U            /* User can configurable first region number */
+
+#define RT_MPU_THREAD_PROTECT_MEM_NUM_REGION             0x2U            /* System protect area number */
+#define RT_MPU_THREAD_PROTECT_MEM_REGION_0               (RT_MPU_REGIONS_NUMBER - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION)
+#define RT_MPU_THREAD_PROTECT_MEM_REGION_1               (RT_MPU_REGIONS_NUMBER - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION + 1)
+
+#define RT_MPU_NUM_CONFIGURABLE_REGION                   (RT_MPU_REGIONS_NUMBER - RT_MPU_FIRST_CONFIGURABLE_REGION - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION) /* number of regions that can be configured */
+#define RT_MPU_LAST_CONFIGURABLE_REGION                  (RT_MPU_REGIONS_NUMBER - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION - 1)
+
+struct mpu_regions
+{
+    rt_uint32_t addr;
+    rt_uint32_t size;
+    rt_uint32_t attribute;
+};
+
+struct mpu_protect_regions
+{
+    rt_thread_t thread;
+    struct rt_mal_region tables;
+};
+
+struct rt_mpu_ops
+{
+   rt_err_t (*init) (struct rt_mal_region *regions);
+   void (*switch_table) (rt_thread_t thread, rt_uint8_t mpu_protect_area_num, struct mpu_protect_regions* mpu_protect_areas);
+   rt_err_t (*get_info) (rt_thread_t thread, rt_uint32_t type, void *arg);
+};
+
+enum mpu_info_type {
+    GET_MPU_REGIONS_NUMBER = 0,
+    GET_MPU_REGIONS_CONFGIG,
+};
+
+/**
+* MPU Region Attribute
+* \param access             Data access permissions, allows you to configure read/write access for User and Privileged mode.
+* \param execute            Instruction access disable bit, 1= disable instruction fetches.
+* \param shareable          Region is shareable between multiple bus masters.
+* \param cacheable          Region is cacheable, i.e. its value may be kept in cache.
+* \param bufferable         Region is bufferable, i.e. using write-back caching. Cacheable but non-bufferable regions use write-through policy.
+* \param type_extern        Type extension field, allows you to configure memory access type, for example strongly ordered, peripheral.
+* \param sub_region         Sub-region support.
+*/ 
+rt_inline rt_uint32_t rt_mpu_region_attribute(rt_uint32_t access,
+                                            rt_uint32_t execute,
+                                            rt_uint32_t shareable,
+                                            rt_uint32_t cacheable,
+                                            rt_uint32_t bufferable,
+                                            rt_uint32_t type_extern,
+                                            rt_uint32_t sub_region)
+{
+    rt_uint32_t attribute = 0;
+
+    attribute = (((access     << REGION_PERMISSION_Pos)  & REGION_PERMISSION_Msk) | \
+                ((execute     << REGION_EXECUTE_Pos)     & REGION_EXECUTE_Msk)    | \
+                ((type_extern << REGION_TEX_Pos )        & REGION_TEX_Msk)        | \
+                ((shareable   << REGION_SHAREABLE_Pos )  & REGION_SHAREABLE_Msk)  | \
+                ((cacheable   << REGION_CACHEABLE_Pos )  & REGION_CACHEABLE_Msk)  | \
+                ((bufferable  << REGION_BUFFERABLE_Pos ) & REGION_BUFFERABLE_Msk) | \
+                ((sub_region  << REGION_SRD_Pos )        & REGION_SRD_Msk));
+
+    return attribute;
+};
+
+/* Extern Fucntion */
+rt_err_t rt_mpu_init(struct rt_mal_region *tables);
+rt_err_t rt_mpu_attach(rt_thread_t thread, void* addr, size_t size, rt_uint32_t attribute);
+rt_err_t rt_mpu_attach_table(rt_thread_t thread, struct mpu_regions *regions);
+rt_err_t rt_mpu_delete(rt_thread_t thread, rt_uint8_t region);
+rt_err_t rt_mpu_refresh(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute, rt_uint8_t region);
+rt_err_t rt_mpu_insert(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute, rt_uint8_t region);
+rt_err_t rt_mpu_get_info(rt_thread_t thread, rt_uint32_t type, void *arg);
+rt_err_t rt_mpu_enable_protect_area(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute);
+rt_err_t rt_mpu_disable_protect_area(rt_thread_t thread, rt_uint8_t region);
+void rt_mpu_table_switch(rt_thread_t thread);
+rt_err_t rt_mpu_ops_register(struct rt_mpu_ops *ops);
+
+void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute));
+void rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __MAL_H__ */

@@ -1,0 +1,17 @@
+menu "MPU abstraction layer"
+
+config RT_USING_MAL
+    bool "Enable mpu abstraction layer"
+    default n
+
+    if RT_USING_MAL
+        config RT_MPU_REGIONS_NUMBER
+            int "Set mpu regions number" 
+            default 8   if ARCH_ARM_CORTEX_M3
+            default 16  if ARCH_ARM_CORTEX_M4
+            default 16  if ARCH_ARM_CORTEX_M7
+            default 16  if ARCH_ARM_CORTEX_M23
+            default 16  if ARCH_ARM_CORTEX_M33
+    endif
+
+endmenu

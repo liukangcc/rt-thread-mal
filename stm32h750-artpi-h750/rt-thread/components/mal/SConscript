@@ -1,0 +1,19 @@
+Import('RTT_ROOT')
+from building import *
+
+cwd = GetCurrentDir()
+src = Glob('src/*.c')
+
+path  = [cwd]
+path += [cwd + '/inc']
+
+if GetDepend('ARCH_ARM'):
+    src += Glob('port/arm/*.c')
+    path += [cwd + '/port/arm']
+elif GetDepend('ARCH_riscv'):
+    src += Glob('port/riscv/*.c')
+    path += [cwd + '/port/riscv']
+
+group = DefineGroup('Mal', src, depend = ['RT_USING_MAL'], CPPPATH = path)
+
+Return('group')

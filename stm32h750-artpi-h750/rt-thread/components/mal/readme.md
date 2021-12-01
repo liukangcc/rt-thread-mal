@@ -1,6 +1,6 @@
 # MPU 抽象层
 
-## 1、介绍
+## 1.介绍
 
 MAL （MPU Abstract Layer），即 mpu 抽象层。是 RT-Thread 自主研发的，支持安全的内存访问。
 
@@ -48,7 +48,7 @@ MAL
 └───SConscript                      // 工程构建脚本
 ```
 
-## MAL API
+## 2.MAL API
 
 MAL API 如下所示，[点击此处查看 API 参数详解](doc/mal_api.md)。
 
@@ -78,7 +78,7 @@ rt_err_t rt_mpu_init(struct rt_mal_region *tables);
 void rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute);
 ```
 
-## 移植 MAL
+## 3.移植 MAL
 
 MAL 移植分为两个层面的移植：架构层移植，和 BSP 层移植。
 
@@ -90,15 +90,15 @@ BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始�
 
 - [不同 BSP 移植 MAL 组件教程](doc/移植教程.md) 
 
-## 使用 MAL
+## 4.使用 MAL
 
-### 开启 MAL 组件
+### 4.1 开启 MAL 组件
 
 在工程目录下，打开 `env` 工具，使能 MPU 抽象层：
 
 ![enable_mal](../../../../../mpu/stm32h750-artpi-h750/rt-thread/components/mal/doc/figures/enable_mal.png)
 
-### 示例：设置线程保护区域
+### 4.2 示例：设置线程保护区域
 
 设置一块内存区域，只有当前线程具有访问权限，其他线程禁止访问。
 
@@ -151,7 +151,7 @@ BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始�
 
 ![image-20211130110741512](../../../../../mpu/stm32h750-artpi-h750/rt-thread/components/mal/doc/figures/handle.png)
 
-### 示例：设置线程受限区域
+### 4.3 示例：设置线程受限区域
 
 只针对当前线程，禁止对某块区域进行读写操作：
 

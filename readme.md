@@ -30,5 +30,5 @@ MAL 组件文档：
 
 - [mal 简介与使用](stm32h750-artpi-h750/rt-thread/components/mal/readme.md)
 - [mal api 介绍](stm32h750-artpi-h750/rt-thread/components/mal/doc/mal_api.md)
-- [mal 移植教程](stm32h750-artpi-h750/rt-thread/components/mal/doc/移植教程.md)
+- [mal 移植教程](stm32h750-artpi-h750/rt-thread/components/mal/doc/mal_port.md)
 

@@ -19,6 +19,45 @@ struct rt_mpu_ops
 
 本部分以 arm 架构为例进行架构移植。
 
+### MPU 配置表切换
+
+在 rt-thread 线程切换函数中，添加 mpu 配置表更新函数：
+
+```c
+switch_to_thread
+	IMPORT  rt_mpu_table_switch
+	IMPORT  rt_current_thread
+
+    LDR     r1, =rt_interrupt_to_thread
+    LDR     r1, [r1]
+	LDR     r1, [r1]                ; load thread stack pointer
+
+    IF      {FPU} != "SoftVFP"
+    LDMFD   r1!, {r3}               ; pop flag
+    ENDIF
+
+    LDMFD   r1!, {r4 - r11}         ; pop r4 - r11 register
+
+    IF      {FPU} != "SoftVFP"
+    CMP     r3,  #0                 ; if(flag_r3 != 0)
+    VLDMFDNE  r1!, {d8 - d15}       ; pop FPU register s16~s31
+    ENDIF
+
+    MSR     psp, r1                 ; update stack pointer
+
+    IF      {FPU} != "SoftVFP"
+    ORR     lr, lr, #0x10           ; lr |=  (1 << 4), clean FPCA.
+    CMP     r3,  #0                 ; if(flag_r3 != 0)
+    BICNE   lr, lr, #0x10           ; lr &= ~(1 << 4), set FPCA.
+    ENDIF
+		
+    PUSH    {r0-r3, r12, lr}
+    LDR     r1, =rt_current_thread
+    LDR     r0, [r1]
+    BL      rt_mpu_table_switch     ; switch mpu table 
+    POP     {r0-r3, r12, lr}
+```
+
 ### ops 实现
 
 arm 架构上 ops 实现示例如下（参考文件 [arm_mal.c](../port/arm/arm_mal.c)） ：

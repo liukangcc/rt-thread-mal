@@ -91,41 +91,6 @@ extern "C" {
 #define RT_MPU_REGION_INVALID                            0x0U
 #define RT_MPU_REGION_VALID                              0x1U
 
-/* mpu region
-
-CORTEX-M3
-
-对于 cortex-m3，共有 8 个 region，系统配置占用 5 个，用户可配置区域为 1 个，保护区域 2 个
-
-| REGION | DESCRIPTION            |
-| ------ | ---------------------- |
-| 0      | FLASH                  |
-| 1      | INTERNAL SRAM          |
-| 2      | EXTERNAL SRAM          |
-| 3      | PRIPHERALS             |
-| 4      | THREAD STACK           |
-| 5      | USER CONFIGURABLE AREA |
-| 6      | PROTECT AREA1          |
-| 7      | PROTECT AREA2          |
-
-CORTEX-M4/M7
-
-对于 cortex-m4/m7，共有 16个 region，系统配置占用 5 个，用户可配置区域为 8 个，保护区域 2 个
-
-| REGION | DESCRIPTION             |
-| ------ | ----------------------- |
-| 0      | FLASH                   |
-| 1      | INTERNAL SRAM           |
-| 2      | EXTERNAL SRAM           |
-| 3      | PRIPHERALS              |
-| 4      | THREAD STACK            |
-| 5      | USER CONFIGURABLE AREA0 |
-| ...    | USER CONFIGURABLE AREAx |
-| 13     | USER CONFIGURABLE AREA8 |
-| 14     | PROTECT AREA1           |
-| 15     | PROTECT AREA2           |
-*/
-
 #define RT_MPU_FLASH_REGION                              0x0U            /* Flash memory region  */
 #define RT_MPU_INTERNAL_SRAM_REGION                      0x1U            /* Internal SRAM region */
 #define RT_MPU_EXTERNAL_SRAM_REGION                      0x2U            /* External SRAM region */

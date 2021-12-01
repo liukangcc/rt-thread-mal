@@ -23,15 +23,55 @@ MAL （MPU Abstract Layer），即 mpu 抽象层。是 RT-Thread 自主研发的
 - privileged access read-only
 - read-only access
 
-### 1.3 框架图
+### 1.3 工作原理
+
+不同架构的芯片，MPU 可设置的 region 数目不同。
+
+对于部分 cortex-m3 芯片，共有 8 个 region，系统配置占用 5 个，用户可配置区域为 1 个，保护区域 2 个：
+
+| REGION | DESCRIPTION            |
+| ------ | ---------------------- |
+| 0      | FLASH                  |
+| 1      | INTERNAL SRAM          |
+| 2      | EXTERNAL SRAM          |
+| 3      | PRIPHERALS             |
+| 4      | THREAD STACK           |
+| 5      | USER CONFIGURABLE AREA |
+| 6      | PROTECT AREA0          |
+| 7      | PROTECT AREA1          |
+
+对于 cortex-m4/m7 芯片，共有 16个 region，系统配置占用 5 个，用户可配置区域为 8 个，保护区域 2 个：
+
+| REGION | DESCRIPTION             |
+| ------ | ----------------------- |
+| 0      | FLASH                   |
+| 1      | INTERNAL SRAM           |
+| 2      | EXTERNAL SRAM           |
+| 3      | PRIPHERALS              |
+| 4      | THREAD STACK            |
+| 5      | USER CONFIGURABLE AREA0 |
+| ...    | USER CONFIGURABLE AREAx |
+| 13     | USER CONFIGURABLE AREA8 |
+| 14     | PROTECT AREA0           |
+| 15     | PROTECT AREA1           |
+
+**FLASH region、Internal SRAM、External SRAM、Pripherals**： 系统配置，BSP 制作者需要根据当前 BSP 配置进行初始化。
+
+**Thread Stack region**：当线程第一次调度时，mal 组件层会设置线程堆栈底部（顶部） 32 个字节的访问权限（Read Only），当线程尝试修改自己堆栈的保护区域时，就会触发异常。
+
+**PROTECT AREA region**：系统保护区域 region 配置。通过设置此 region，可以实现内存隔离，即某一任务用到的内存区域不会被其他任务破坏。
+
+**USER CONFIGURABLE AREA region**：用户自定义 region 配置。设置当前线程的内存访问权限，该设置对其他线程无效。
+
+### 1.4 框架图
 
 ![image-20211123161228115](doc/figures/frame.png)
 
-### 1.4 数据流图
+### 1.5 数据流图
 
 ![image-20211123161228115](doc/figures/stream.png)
 
-### 1.5 目录结构
+### 1.6 目录结构
 
 MAL 组件目录结构如下所示：
 
@@ -96,7 +136,7 @@ BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始�
 
 在工程目录下，打开 `env` 工具，使能 MPU 抽象层：
 
-![enable_mal](../../../../../mpu/stm32h750-artpi-h750/rt-thread/components/mal/doc/figures/enable_mal.png)
+![enable_mal](doc/figures/enable_mal.png)
 
 ### 4.2 示例：设置线程保护区域
 
@@ -149,7 +189,7 @@ BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始�
 
 当线程 `mpu1` 访问内存区域 `protect_memory` 时，就会触发内存异常中断服务。如果该线程注册了 mpu 异常回调函数，mal 组件层就会调用该函数。
 
-![image-20211130110741512](../../../../../mpu/stm32h750-artpi-h750/rt-thread/components/mal/doc/figures/handle.png)
+![image-20211130110741512](doc/figures/handle.png)
 
 ### 4.3 示例：设置线程受限区域
 
@@ -163,7 +203,7 @@ static void thread1_entry(void *param)
 {
    while (1)
    {
-       protect_memory[0] = 1;
+       protect_memory[0] = 1; /* mpu 线程访问受限区域，触发异常 */
        rt_thread_mdelay(1000);
    }
 }

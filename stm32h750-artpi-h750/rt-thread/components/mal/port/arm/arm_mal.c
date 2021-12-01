@@ -40,18 +40,18 @@ static rt_uint32_t rt_mpu_align_min(rt_uint32_t len)
 }
 
 /* enable mpu */
-static void rt_mpu_arm_enable(void)
+static void _enable(void)
 {
     ARM_MPU_Enable(4);
 }
 
 /* disable mpu */
-static void rt_mpu_arm_disable()
+static void _disable()
 {
     ARM_MPU_Disable(); 
 }
 
-static rt_uint32_t rt_mpu_arm_rasr_value(int attribute, int size)
+static rt_uint32_t _rasr_value(int attribute, int size)
 {
     rt_uint32_t execute, access, type_extern, shareable, cacheable, bufferable, sub_region;
 
@@ -66,21 +66,21 @@ static rt_uint32_t rt_mpu_arm_rasr_value(int attribute, int size)
     return ARM_MPU_RASR(execute, access, type_extern, shareable, cacheable, bufferable, sub_region, size);
 };
 
-static void _arm_get_regisger_value(uint32_t rnr, int* rbar, int* rasr)
+static void _get_regisger_value(uint32_t rnr, int* rbar, int* rasr)
 {
     MPU->RNR = rnr;
     *rbar = MPU->RBAR;
     *rasr = MPU->RASR;
 }
 
-static void rt_mpu_arm_get_region_config(void *arg)
+static void _get_region_config(void *arg)
 {
     int index = 0, rbar, rasr;
     struct rt_mal_region *tables = (struct rt_mal_region *)arg;
 
     for (index = 0; index < RT_MPU_REGIONS_NUMBER; index++)
     {
-        _arm_get_regisger_value(index, &rbar, &rasr);
+        _get_regisger_value(index, &rbar, &rasr);
         tables[index].region    = rbar & 0xFUL;
         tables[index].addr      = rbar & 0xFFFFFF80UL;
         if (((rasr >> MPU_RASR_SIZE_Pos) & 0x1FUL) > 0)
@@ -102,7 +102,7 @@ static void rt_mpu_arm_get_region_config(void *arg)
     }
 }
 
-static rt_err_t rt_mpu_arm_get_info(rt_thread_t thread, rt_uint32_t type, void *arg)
+static rt_err_t _get_info(rt_thread_t thread, rt_uint32_t type, void *arg)
 {
     rt_err_t result = RT_EOK;
     if (thread == RT_NULL || arg == RT_NULL)
@@ -117,7 +117,7 @@ static rt_err_t rt_mpu_arm_get_info(rt_thread_t thread, rt_uint32_t type, void *
         break;
         
         case GET_MPU_REGIONS_CONFGIG:
-            rt_mpu_arm_get_region_config(arg);
+            _get_region_config(arg);
         default:
             LOG_W("not support type: %d", type);
             result = -RT_ERROR;
@@ -127,7 +127,7 @@ static rt_err_t rt_mpu_arm_get_info(rt_thread_t thread, rt_uint32_t type, void *
     return result;
 }
 
-static void rt_mpu_arm_general_region_table_switch(rt_thread_t thread)
+static void _general_region_table_switch(rt_thread_t thread)
 {
     int align_size, align_addr, rabr, rasr, index = 0;
 
@@ -158,13 +158,13 @@ static void rt_mpu_arm_general_region_table_switch(rt_thread_t thread)
         align_size = rt_mpu_align_min(thread->setting.tables[index].size);                                                 /* 对齐后的字节数 */
         align_addr = (rt_uint32_t)RT_ALIGN_DOWN((rt_uint32_t)thread->setting.tables[index].addr,  1 << (align_size + 1));  /* 对齐后的地址 */
         rabr = ARM_MPU_RBAR((rt_uint32_t)thread->setting.tables[index].region, align_addr);
-        rasr = rt_mpu_arm_rasr_value(thread->setting.tables[index].attribute, align_size); /* MPU Region Attribute and Size Register Value */
+        rasr = _rasr_value(thread->setting.tables[index].attribute, align_size); /* MPU Region Attribute and Size Register Value */
         
         ARM_MPU_SetRegion(rabr, rasr);
     }
 }
 
-static void rt_mpu_arm_protect_region_table_switch(rt_thread_t thread, rt_uint8_t mpu_protect_area_num, 
+static void _protect_region_table_switch(rt_thread_t thread, rt_uint8_t mpu_protect_area_num, 
                                                    struct mpu_protect_regions* mpu_protect_areas)
 {
     int align_size, align_addr, rabr, rasr, index = 0;
@@ -183,38 +183,38 @@ static void rt_mpu_arm_protect_region_table_switch(rt_thread_t thread, rt_uint8_
         if (mpu_protect_areas[index].thread == thread)
         {
             rabr = ARM_MPU_RBAR((rt_uint32_t)mpu_protect_areas[index].tables.region, align_addr);
-            rasr = rt_mpu_arm_rasr_value(mpu_protect_areas[index].tables.attribute, align_size); /* MPU Region Attribute and Size Register Value */
+            rasr = _rasr_value(mpu_protect_areas[index].tables.attribute, align_size); /* MPU Region Attribute and Size Register Value */
         }
         /* thread can't access this region */
         else
         {
             int attribute = (mpu_protect_areas[index].tables.attribute & (~REGION_PERMISSION_Msk)) | ((RT_MPU_REGION_NO_ACCESS << REGION_PERMISSION_Pos) & REGION_PERMISSION_Msk);
             rabr = ARM_MPU_RBAR((rt_uint32_t)mpu_protect_areas[index].tables.region, align_addr);
-            rasr = rt_mpu_arm_rasr_value(attribute, align_size);
+            rasr = _rasr_value(attribute, align_size);
         }
 
         ARM_MPU_SetRegion(rabr, rasr);
     }
 }
-static void rt_mpu_arm_switch_table(rt_thread_t thread, rt_uint8_t mpu_protect_area_num, 
+static void _switch_table(rt_thread_t thread, rt_uint8_t mpu_protect_area_num, 
                                     struct mpu_protect_regions* mpu_protect_areas)
 {
     RT_ASSERT(thread != RT_NULL);
 
-    rt_mpu_arm_disable();
+    _disable();
 
-    rt_mpu_arm_general_region_table_switch(thread);
-    rt_mpu_arm_protect_region_table_switch(thread, mpu_protect_area_num, mpu_protect_areas);
+    _general_region_table_switch(thread);
+    _protect_region_table_switch(thread, mpu_protect_area_num, mpu_protect_areas);
 
-    rt_mpu_arm_enable();
+    _enable();
 }
 
-static rt_err_t rt_mpu_arm_init(struct rt_mal_region *tables)
+static rt_err_t _init(struct rt_mal_region *tables)
 {
     int align_size, align_addr, rbar, rasr, index = 0;
     int regions_number = 0;
     
-    rt_mpu_arm_disable();
+    _disable();
     regions_number = MPU->TYPE >> 8 & 0xFF;
     if (regions_number == 0)
     {
@@ -243,31 +243,31 @@ static rt_err_t rt_mpu_arm_init(struct rt_mal_region *tables)
             align_addr = (rt_uint32_t)RT_ALIGN_DOWN((rt_uint32_t)tables[index].addr, 1 << (align_size + 1));
             
             rbar = ARM_MPU_RBAR((rt_uint32_t)tables[index].region, align_addr);
-            rasr = rt_mpu_arm_rasr_value(tables[index].attribute, align_size);
+            rasr = _rasr_value(tables[index].attribute, align_size);
 
             ARM_MPU_SetRegion(rbar, rasr);
         }            
     }
 
-    rt_mpu_arm_enable();
+    _enable();
     
     LOG_I("mpu init success.");
     
     return RT_EOK;
 }
 
-static struct rt_mpu_ops arm_mpu_ops =
+static struct rt_mpu_ops _ops =
 {
-    .init         = rt_mpu_arm_init,
-    .switch_table = rt_mpu_arm_switch_table,
-    .get_info     = rt_mpu_arm_get_info
+    .init         = _init,
+    .switch_table = _switch_table,
+    .get_info     = _get_info
 };
 
-static int rt_mpu_arm_register(void)
+static int _register(void)
 {
     rt_err_t result = RT_EOK;
 
-    result = rt_mpu_ops_register(&arm_mpu_ops);
+    result = rt_mpu_ops_register(&_ops);
     if (result != RT_EOK)
     {
         LOG_E(" arm mal ops register failed");
@@ -275,4 +275,4 @@ static int rt_mpu_arm_register(void)
 
     return result;
 }
-INIT_BOARD_EXPORT(rt_mpu_arm_register);
+INIT_BOARD_EXPORT(_register);

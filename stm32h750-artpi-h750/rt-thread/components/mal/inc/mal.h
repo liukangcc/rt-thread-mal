@@ -19,6 +19,11 @@
 extern "C" {
 #endif
 
+/* MAL version information */
+#define RT_MAL_VERSION                      1L              /**< major version number */
+#define RT_MAL_SUBVERSION                   0L              /**< minor version number */
+#define RT_MAL_REVISION                     0L              /**< revise version number */
+
 #ifndef RT_MPU_ALIGN_SMALLEST_SIZE
 #define RT_MPU_ALIGN_SMALLEST_SIZE     32                    /* mpu region smallest size */
 #else

@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32H750xx, USE_HAL_DRIVER, RT_USING_ARM_LIBC, __RTTHREAD__, __CLK_TCK=RT_TICK_PER_SECOND</Define>
               <Undefine></Undefine>
-              <IncludePath>applications;rt-thread\libcpu\arm\common;rt-thread\libcpu\arm\cortex-m7;rt-thread\components\drivers\include;rt-thread\components\drivers\include;rt-thread\components\drivers\include;board;board\CubeMX_Config\Core\Inc;board\port;libraries\HAL_Drivers;libraries\HAL_Drivers\config;rt-thread\components\dfs\include;rt-thread\components\dfs\filesystems\devfs;rt-thread\components\finsh;.;rt-thread\include;rt-thread\components\libc\compilers\common;rt-thread\components\libc\compilers\common\nogcc;libraries\STM32H7xx_HAL\STM32H7xx_HAL_Driver\Inc;libraries\STM32H7xx_HAL\CMSIS\Device\ST\STM32H7xx\Include;libraries\STM32H7xx_HAL\CMSIS\Include;rt-thread\components\libc\posix\src</IncludePath>
+              <IncludePath>applications;rt-thread\libcpu\arm\common;rt-thread\libcpu\arm\cortex-m7;rt-thread\components\drivers\include;rt-thread\components\drivers\include;rt-thread\components\drivers\include;board;board\CubeMX_Config\Core\Inc;board\port;libraries\HAL_Drivers;libraries\HAL_Drivers\config;rt-thread\components\dfs\include;rt-thread\components\dfs\filesystems\devfs;rt-thread\components\finsh;.;rt-thread\include;rt-thread\components\libc\compilers\common;rt-thread\components\libc\compilers\common\nogcc;libraries\STM32H7xx_HAL\STM32H7xx_HAL_Driver\Inc;libraries\STM32H7xx_HAL\CMSIS\Device\ST\STM32H7xx\Include;libraries\STM32H7xx_HAL\CMSIS\Include;rt-thread\components\mal;rt-thread\components\mal\inc;rt-thread\components\mal\port\arm;rt-thread\components\libc\posix\src</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -384,6 +384,11 @@
           <GroupName>Applications</GroupName>
           <Files>
             <File>
+              <FileName>mpu_port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>applications\mpu_port.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>applications\main.c</FilePath>
@@ -394,9 +399,9 @@
           <GroupName>CPU</GroupName>
           <Files>
             <File>
-              <FileName>div0.c</FileName>
+              <FileName>backtrace.c</FileName>
               <FileType>1</FileType>
-              <FilePath>rt-thread\libcpu\arm\common\div0.c</FilePath>
+              <FilePath>rt-thread\libcpu\arm\common\backtrace.c</FilePath>
             </File>
             <File>
               <FileName>showmem.c</FileName>
@@ -404,19 +409,19 @@
               <FilePath>rt-thread\libcpu\arm\common\showmem.c</FilePath>
             </File>
             <File>
-              <FileName>backtrace.c</FileName>
+              <FileName>div0.c</FileName>
               <FileType>1</FileType>
-              <FilePath>rt-thread\libcpu\arm\common\backtrace.c</FilePath>
-            </File>
-            <File>
-              <FileName>cpu_cache.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\libcpu\arm\cortex-m7\cpu_cache.c</FilePath>
+              <FilePath>rt-thread\libcpu\arm\common\div0.c</FilePath>
             </File>
             <File>
               <FileName>context_rvds.S</FileName>
               <FileType>2</FileType>
               <FilePath>rt-thread\libcpu\arm\cortex-m7\context_rvds.S</FilePath>
+            </File>
+            <File>
+              <FileName>cpu_cache.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\libcpu\arm\cortex-m7\cpu_cache.c</FilePath>
             </File>
             <File>
               <FileName>cpuport.c</FileName>
@@ -444,19 +449,14 @@
               <FilePath>rt-thread\components\drivers\src\dataqueue.c</FilePath>
             </File>
             <File>
-              <FileName>pipe.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\components\drivers\src\pipe.c</FilePath>
-            </File>
-            <File>
               <FileName>workqueue.c</FileName>
               <FileType>1</FileType>
               <FilePath>rt-thread\components\drivers\src\workqueue.c</FilePath>
             </File>
             <File>
-              <FileName>completion.c</FileName>
+              <FileName>pipe.c</FileName>
               <FileType>1</FileType>
-              <FilePath>rt-thread\components\drivers\src\completion.c</FilePath>
+              <FilePath>rt-thread\components\drivers\src\pipe.c</FilePath>
             </File>
             <File>
               <FileName>ringblk_buf.c</FileName>
@@ -469,6 +469,11 @@
               <FilePath>rt-thread\components\drivers\src\waitqueue.c</FilePath>
             </File>
             <File>
+              <FileName>completion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\components\drivers\src\completion.c</FilePath>
+            </File>
+            <File>
               <FileName>ringbuffer.c</FileName>
               <FileType>1</FileType>
               <FilePath>rt-thread\components\drivers\src\ringbuffer.c</FilePath>
@@ -479,6 +484,11 @@
           <GroupName>Drivers</GroupName>
           <Files>
             <File>
+              <FileName>stm32h7xx_hal_msp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>board\CubeMX_Config\Core\Src\stm32h7xx_hal_msp.c</FilePath>
+            </File>
+            <File>
               <FileName>startup_stm32h750xx.s</FileName>
               <FileType>2</FileType>
               <FilePath>libraries\STM32H7xx_HAL\CMSIS\Device\ST\STM32H7xx\Source\Templates\arm\startup_stm32h750xx.s</FilePath>
@@ -487,11 +497,6 @@
               <FileName>board.c</FileName>
               <FileType>1</FileType>
               <FilePath>board\board.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32h7xx_hal_msp.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>board\CubeMX_Config\Core\Src\stm32h7xx_hal_msp.c</FilePath>
             </File>
             <File>
               <FileName>drv_gpio.c</FileName>
@@ -564,9 +569,14 @@
           <GroupName>Kernel</GroupName>
           <Files>
             <File>
-              <FileName>device.c</FileName>
+              <FileName>clock.c</FileName>
               <FileType>1</FileType>
-              <FilePath>rt-thread\src\device.c</FilePath>
+              <FilePath>rt-thread\src\clock.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\src\timer.c</FilePath>
             </File>
             <File>
               <FileName>irq.c</FileName>
@@ -574,14 +584,9 @@
               <FilePath>rt-thread\src\irq.c</FilePath>
             </File>
             <File>
-              <FileName>mem.c</FileName>
+              <FileName>scheduler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>rt-thread\src\mem.c</FilePath>
-            </File>
-            <File>
-              <FileName>mempool.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\src\mempool.c</FilePath>
+              <FilePath>rt-thread\src\scheduler.c</FilePath>
             </File>
             <File>
               <FileName>idle.c</FileName>
@@ -594,14 +599,19 @@
               <FilePath>rt-thread\src\thread.c</FilePath>
             </File>
             <File>
+              <FileName>mem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\src\mem.c</FilePath>
+            </File>
+            <File>
               <FileName>ipc.c</FileName>
               <FileType>1</FileType>
               <FilePath>rt-thread\src\ipc.c</FilePath>
             </File>
             <File>
-              <FileName>scheduler.c</FileName>
+              <FileName>object.c</FileName>
               <FileType>1</FileType>
-              <FilePath>rt-thread\src\scheduler.c</FilePath>
+              <FilePath>rt-thread\src\object.c</FilePath>
             </File>
             <File>
               <FileName>kservice.c</FileName>
@@ -609,24 +619,19 @@
               <FilePath>rt-thread\src\kservice.c</FilePath>
             </File>
             <File>
+              <FileName>device.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\src\device.c</FilePath>
+            </File>
+            <File>
+              <FileName>mempool.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\src\mempool.c</FilePath>
+            </File>
+            <File>
               <FileName>components.c</FileName>
               <FileType>1</FileType>
               <FilePath>rt-thread\src\components.c</FilePath>
-            </File>
-            <File>
-              <FileName>timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\src\timer.c</FilePath>
-            </File>
-            <File>
-              <FileName>clock.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\src\clock.c</FilePath>
-            </File>
-            <File>
-              <FileName>object.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\src\object.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -639,24 +644,24 @@
               <FilePath>rt-thread\components\libc\compilers\armlibc\syscalls.c</FilePath>
             </File>
             <File>
-              <FileName>mem_std.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\components\libc\compilers\armlibc\mem_std.c</FilePath>
-            </File>
-            <File>
               <FileName>libc_syms.c</FileName>
               <FileType>1</FileType>
               <FilePath>rt-thread\components\libc\compilers\armlibc\libc_syms.c</FilePath>
             </File>
             <File>
-              <FileName>stdlib.c</FileName>
+              <FileName>mem_std.c</FileName>
               <FileType>1</FileType>
-              <FilePath>rt-thread\components\libc\compilers\common\stdlib.c</FilePath>
+              <FilePath>rt-thread\components\libc\compilers\armlibc\mem_std.c</FilePath>
             </File>
             <File>
               <FileName>time.c</FileName>
               <FileType>1</FileType>
               <FilePath>rt-thread\components\libc\compilers\common\time.c</FilePath>
+            </File>
+            <File>
+              <FileName>stdlib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\components\libc\compilers\common\stdlib.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -776,8 +781,28 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Mal</GroupName>
+          <Files>
+            <File>
+              <FileName>arm_mal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\components\mal\port\arm\arm_mal.c</FilePath>
+            </File>
+            <File>
+              <FileName>mal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\components\mal\src\mal.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>POSIX</GroupName>
           <Files>
+            <File>
+              <FileName>libc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>rt-thread\components\libc\posix\src\libc.c</FilePath>
+            </File>
             <File>
               <FileName>select.c</FileName>
               <FileType>1</FileType>
@@ -787,11 +812,6 @@
               <FileName>delay.c</FileName>
               <FileType>1</FileType>
               <FilePath>rt-thread\components\libc\posix\src\delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>libc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>rt-thread\components\libc\posix\src\libc.c</FilePath>
             </File>
             <File>
               <FileName>unistd.c</FileName>

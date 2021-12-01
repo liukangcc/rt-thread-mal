@@ -6,6 +6,7 @@ CPPPATH = [cwd, str(Dir('#'))]
 
 src     = Split("""
 main.c
+mpu_port.c
 """)
 
 path = [cwd]

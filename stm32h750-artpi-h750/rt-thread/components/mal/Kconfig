@@ -5,6 +5,10 @@ config RT_USING_MAL
     default n
 
     if RT_USING_MAL
+        config RT_MAL_USING_LOG
+            bool "Enable mpu abstraction layer debug log"
+            default n
+
         config RT_MPU_REGIONS_NUMBER
             int "Set mpu regions number" 
             default 8   if ARCH_ARM_CORTEX_M3

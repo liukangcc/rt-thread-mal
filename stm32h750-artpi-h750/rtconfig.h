@@ -124,6 +124,8 @@
 
 /* MPU abstraction layer */
 
+#define RT_USING_MAL
+#define RT_MPU_REGIONS_NUMBER 16
 
 /* Utilities */
 

@@ -28,8 +28,7 @@ MAL (mpu abstract layer) 是 rt-thread 官方基于 Memory Protect Unit (MPU) �
 
 MAL 组件文档：
 
-- [mal 简介](stm32h750-artpi-h750/rt-thread/components/mal/readme.md)
-- [mal api 介绍](stm32h750-artpi-h750/rt-thread/components/mal/doc/api_introduce.md)
+- [mal 简介与使用](stm32h750-artpi-h750/rt-thread/components/mal/readme.md)
+- [mal api 介绍](stm32h750-artpi-h750/rt-thread/components/mal/doc/mal_api.md)
 - [mal 移植教程](stm32h750-artpi-h750/rt-thread/components/mal/doc/移植教程.md)
-- [mal 使用示例](stm32h750-artpi-h750/rt-thread/components/mal/doc/使用例程.md)
 

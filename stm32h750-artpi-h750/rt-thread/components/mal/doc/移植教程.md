@@ -1,13 +1,87 @@
 # MAL 移植教程
 
-本文档旨在引导用户在自己的开发板上移植 MAL 组件；MAL 组件的移植非常简单，BSP 开发者只需要实现以下两个接口即可：
+## 架构移植
 
-- MPU 初始化函数
-- MPU 异常处理函数
+本部分为架构移植教程，根据此教程可以完成在不同架构上移植 MAL 组件，需根据架构实现 MAL 层提供的 ops 并调用 rt_mpu_ops_register() 进行注册。
 
-本教程以 ART-PI BSP 为例，进行 MAL 移植。
+如下是由 MAL 层提供的 rt_mpu_ops ，移植时需要实例化 rt_mpu_ops 并实现 ops 操作。
 
-## MPU 初始化函数
+```c
+struct rt_mpu_ops
+{
+   rt_err_t (*init) (struct rt_mal_region *regions);
+   void (*switch_table) (rt_thread_t thread, 
+   					   rt_uint8_t mpu_protect_area_num, 
+                         struct mpu_protect_regions* mpu_protect_areas);
+   rt_err_t (*get_info) (rt_thread_t thread, rt_uint32_t type, void *arg);
+};
+```
+
+本部分以 arm 架构为例进行架构移植。
+
+### ops 实现
+
+arm 架构上 ops 实现示例如下（参考文件 [arm_mal.c](../port/arm/arm_mal.c)） ：
+
+```c
+static rt_err_t _mpu_init(struct rt_mal_region *tables)
+{
+    ...
+}
+
+static void _mpu_switch_table(rt_thread_t thread, 
+                                    rt_uint8_t mpu_protect_area_num,
+                                    struct mpu_protect_regions* mpu_protect_areas)
+{
+    ...
+}
+
+static rt_err_t _mpu_get_info(rt_thread_t thread, rt_uint32_t type, void *arg)
+{
+    ...
+}
+
+static struct rt_mpu_ops _mpu_ops =
+{
+    .init         = _mpu_init,
+    .switch_table = _mpu_switch_table,
+    .get_info     = _mpu_get_info
+};
+```
+
+### ops 注册
+
+arm 架构上 ops 注册示例如下（参考文件 [arm_mal.c](../port/arm/arm_mal.c) ）：
+
+```c
+static int rt_mpu_arm_register(void)
+{
+    rt_err_t result = RT_EOK;
+
+    /* 调用 rt_mpu_ops_register 注册 ops */
+    result = rt_mpu_ops_register(&_mpu_ops);
+    if (result != RT_EOK)
+    {
+        LOG_E(" arm mal ops register failed");
+    }
+
+    return result;
+}
+INIT_BOARD_EXPORT(rt_mpu_arm_register);  /* 自动初始化 */
+```
+
+## BSP 移植
+
+本部分教程引导用户在自己的开发板上移植 MAL 组件；MAL 组件的移植非常简单，只需要实现以下两个接口即可：
+
+- MPU 初始化函数（需调用 rt_mpu_init() ）
+- MPU 异常处理函数（需在中断处理函数中调用 rt_mpu_exception_handler() ）
+
+本部分以 ART-PI BSP 为例进行移植。
+
+### MPU 初始化函数
+
+根据具体硬件情况，完成板级 MPU 初始化配置，并调用 rt_mpu_init()。
 
 ```c
 /* ROM */
@@ -70,14 +144,14 @@ static void mpu_init(void)
 }
 ```
 
-## MPU 异常处理函数
+### MPU 异常处理函数
 
-对于 ART-Pi BSP，当发生内存访问错误时，会触发 `MemManage_Handler` 中断，用户需要记录当前发生中断的内存地址，线程，以及中断类型。
+对于 ART-Pi BSP，当发生内存访问错误时，会触发 `MemManage_Handler` 中断，用户需要记录当前发生中断的内存地址，线程，以及中断类型。调用 rt_mpu_exception_handler() 可以触发用户设置的 hook 钩子函数。
 
  ```c
  void MemManage_Handler(void)
  {
-     rt_uint32_t fault_address, fault_type;;
+     rt_uint32_t fault_address, fault_type;
  
      fault_address = SCB->MMFAR; /* memory manage faults address */
      rt_kprintf("mem manage fault:\n");

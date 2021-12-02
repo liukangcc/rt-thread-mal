@@ -8,7 +8,8 @@
  * 2021-11-25     liukang      first version
  */
 
-#include <arm_mal.h>
+#include <riscv_mal.h>
+#include <board.h>
 
 #define DBG_TAG    "mal.riscv"
 #ifdef RT_MAL_USING_LOG
@@ -18,34 +19,34 @@
 #endif
 #include <rtdbg.h>
 
-static rt_err_t rt_mpu_riscv_get_info(rt_thread_t thread, rt_uint32_t type, void *arg)
+static rt_err_t _mpu_get_info(rt_thread_t thread, rt_uint32_t type, void *arg)
 {
     return RT_EOK;
 }
 
-static void rt_mpu_riscv_switch_table(rt_thread_t thread, rt_uint8_t mpu_protect_area_num, 
+static void _mpu_switch_table(rt_thread_t thread, rt_uint8_t mpu_protect_area_num, 
                                       struct mpu_protect_regions* mpu_protect_areas)
 {
     return;
 }
 
-static rt_err_t rt_mpu_riscv_init(struct rt_mal_region *tables)
+static rt_err_t _mpu_init(struct rt_mal_region *tables)
 {
     return RT_EOK;
 }
 
-static struct rt_mpu_ops riscv_mpu_ops =
+static struct rt_mpu_ops _mpu_ops =
 {
-    .init         = rt_mpu_riscv_init,
-    .switch_table = rt_mpu_riscv_switch_table,
-    .get_info     = rt_mpu_riscv_get_info
+    .init         = _mpu_init,
+    .switch_table = _mpu_switch_table,
+    .get_info     = _mpu_get_info
 };
 
-static int rt_mpu_riscv_register(void)
+static int _mpu_register(void)
 {
     rt_err_t result = RT_EOK;
 
-    result = rt_mpu_ops_register(&riscv_mpu_ops);
+    result = rt_mpu_ops_register(&_mpu_ops);
     if (result != RT_EOK)
     {
         LOG_E("riscv mal ops register failed");
@@ -53,4 +54,4 @@ static int rt_mpu_riscv_register(void)
 
     return result;
 }
-INIT_BOARD_EXPORT(rt_mpu_riscv_register);
+INIT_BOARD_EXPORT(_mpu_register);

@@ -103,10 +103,10 @@ rt_err_t rt_mpu_refresh(rt_thread_t thread, void *addr, size_t size, rt_uint32_t
 rt_err_t rt_mpu_enable_protect_area(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute);
 rt_err_t rt_mpu_disable_protect_area(rt_thread_t thread, rt_uint8_t region);
 
-void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute));
-
 rt_err_t rt_mpu_insert(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute, rt_uint8_t region);
 rt_err_t rt_mpu_get_info(rt_thread_t thread, rt_uint32_t type, void *arg);
+
+void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute));
 
 void rt_mpu_table_switch(rt_thread_t thread);
 

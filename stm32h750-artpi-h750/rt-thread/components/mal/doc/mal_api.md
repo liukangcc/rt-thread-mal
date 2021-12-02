@@ -169,18 +169,18 @@ rt_err_t rt_mpu_disable_protect_area(rt_thread_t thread, rt_uint8_t region);
 | RT_EOK     | 添加成功                                                     |
 | OTHERS     | 添加失败                                                     |
 
-### 设置线程异常回调
+### 设置 MAL 异常钩子函数
 
-用户可以通过使用此接口 `rt_mpu_exception_sethook`，注册线程内存访问错误异常回调：
+用户可以通过使用此接口 `rt_mpu_exception_sethook`，注册线程内存访问错误异常钩子函数：
 
 ```c
 void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute));
 ```
 
-| 参数       | 描述                                                         |
-| ---------- | ------------------------------------------------------------ |
-| thread     | 线程句柄。线程句柄由用户提供出来，并指向对应的线程控制块内存地址 |
-| hook       | 异常回调函数                                         |
+| 参数   | 描述                                                         |
+| ------ | ------------------------------------------------------------ |
+| thread | 线程句柄。线程句柄由用户提供出来，并指向对应的线程控制块内存地址 |
+| hook   | 异常钩子函数                                                 |
 
 伪代码实现如下：
 

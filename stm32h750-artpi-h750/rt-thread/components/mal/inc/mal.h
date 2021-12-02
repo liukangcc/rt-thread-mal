@@ -66,6 +66,7 @@ extern "C" {
 #define REGION_SRD_Pos                 11U                               /* Sub-region support */
 #define REGION_SRD_Msk                 (0xFFUL << REGION_SRD_Pos)
 
+/* access */
 #define RT_MPU_REGION_NO_ACCESS                          0x0U
 #define RT_MPU_REGION_PRIVILEGED_RW                      0x1U
 #define RT_MPU_REGION_PRIVILEGED_RW_UNPRIV_RO            0x2U
@@ -73,20 +74,28 @@ extern "C" {
 #define RT_MPU_REGION_PRIVILEGED_RO                      0x5U
 #define RT_MPU_REGION_RO                                 0x6U
 
+/* execute */
 #define RT_MPU_REGION_EXECUTE_ENABLE                     0x0U
 #define RT_MPU_REGION_EXECUTE_DISABLE                    0x1U
 
-#define RT_MPU_REGION_TEX_ENABLE                         0x1U
-#define RT_MPU_REGION_TEX_DISABLE                        0x0U
-
+/* shareable */
 #define RT_MPU_REGION_SHAREABLE_ENABLE                   0x1U
 #define RT_MPU_REGION_SHAREABLE_DISABLE                  0x0U
 
+/* cacheable */
 #define RT_MPU_REGION_CACHEABLE_ENABLE                   0x1U
 #define RT_MPU_REGION_CACHEABLE_DISABLE                  0x0U
 
+/* bufferable */
 #define RT_MPU_REGION_BUFFERABLE_ENABLE                  0x1U
 #define RT_MPU_REGION_BUFFERABLE_DISABLE                 0x0U
+
+/* type_extern */
+#define RT_MPU_REGION_TEX_ENABLE                         0x1U
+#define RT_MPU_REGION_TEX_DISABLE                        0x0U
+
+/* sub_region */
+#define RT_MPU_SUB_REGION_DEFAULT                        0x0U
 
 #define RT_MPU_REGION_INVALID                            0x0U
 #define RT_MPU_REGION_VALID                              0x1U

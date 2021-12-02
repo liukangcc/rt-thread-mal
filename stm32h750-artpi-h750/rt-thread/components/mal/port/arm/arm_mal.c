@@ -48,7 +48,7 @@ static void _enable(void)
 /* disable mpu */
 static void _disable()
 {
-    ARM_MPU_Disable(); 
+    ARM_MPU_Disable();
 }
 
 static rt_uint32_t _rasr_value(int attribute, int size)

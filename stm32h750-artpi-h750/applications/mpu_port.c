@@ -16,7 +16,7 @@
 #define RT_MPU_SRAM_SIZE                                (512UL * 1024)
 
 struct rt_mal_region regions[4] = {0};
-static int mpu_init(void)
+static int rt_hw_mpu_init(void)
 {
     regions[RT_MPU_FLASH_REGION].region = RT_MPU_FLASH_REGION;
     regions[RT_MPU_FLASH_REGION].addr = RT_MPU_FLASH_START_ADDR, 
@@ -60,8 +60,7 @@ static int mpu_init(void)
     
     return RT_EOK;
 }
-INIT_APP_EXPORT(mpu_init);
-
+INIT_APP_EXPORT(rt_hw_mpu_init);
 
 void MemManage_Handler(void)
 {
@@ -102,7 +101,7 @@ void MemManage_Handler(void)
    }
 
    fault_type = SCB->CFSR;            /* memory manage faults status */
-
+    
    rt_mpu_exception_handler(rt_thread_self(), (void *)fault_address, fault_type);
 
     while (1);

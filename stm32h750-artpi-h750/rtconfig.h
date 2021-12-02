@@ -125,6 +125,8 @@
 /* MPU abstraction layer */
 
 #define RT_USING_MAL
+#define RT_MAL_USING_THREAD_STACK_PROTECT
+#define RT_MAL_HW_USED_REGIONS 3
 #define RT_MPU_REGIONS_NUMBER 16
 
 /* Utilities */

@@ -5,10 +5,18 @@ config RT_USING_MAL
     default n
 
     if RT_USING_MAL
+        config RT_MAL_USING_THREAD_STACK_PROTECT
+            bool "Enable thread stack protect"
+            default y
+
         config RT_MAL_USING_LOG
             bool "Enable mpu abstraction layer debug log"
             default n
 
+        config RT_MAL_HW_USED_REGIONS
+            int "Set hardware used mpu regions number" 
+            default 3
+    
         config RT_MPU_REGIONS_NUMBER
             int "Set mpu regions number" 
             default 8   if ARCH_ARM_CORTEX_M3

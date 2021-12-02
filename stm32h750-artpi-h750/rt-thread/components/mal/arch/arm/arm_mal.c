@@ -53,7 +53,7 @@ static void _mpu_disable(void)
 
 static rt_uint32_t _mpu_rasr_value(int attribute, int size)
 {
-    rt_uint32_t execute, access, type_extern, shareable, cacheable, bufferable, sub_region;
+    rt_uint32_t execute, access, type_extern, shareable, cacheable, bufferable;
 
     execute     = (attribute >> REGION_EXECUTE_Pos) & 0x1UL;
     access      = (attribute >> REGION_PERMISSION_Pos) & 0x7UL;
@@ -61,9 +61,8 @@ static rt_uint32_t _mpu_rasr_value(int attribute, int size)
     shareable   = (attribute >> REGION_SHAREABLE_Pos) & 0x1UL;
     cacheable   = (attribute >> REGION_CACHEABLE_Pos) & 0x1UL;
     bufferable  = (attribute >> REGION_BUFFERABLE_Pos) & 0x1UL; 
-    sub_region  = (attribute >> REGION_SRD_Pos) & 0xFFUL; 
 
-    return ARM_MPU_RASR(execute, access, type_extern, shareable, cacheable, bufferable, sub_region, size);
+    return ARM_MPU_RASR(execute, access, type_extern, shareable, cacheable, bufferable, 0x00, size);
 };
 
 static void _mpu_get_register_value(uint32_t rnr, int* rbar, int* rasr)
@@ -97,8 +96,7 @@ static void _mpu_get_region_config(void *arg)
                                                           (rasr >> MPU_RASR_S_Pos)  & 0x01UL, 
                                                           (rasr >> MPU_RASR_C_Pos)  & 0x01UL,
                                                           (rasr >> MPU_RASR_B_Pos)  & 0x01UL,  
-                                                          (rasr >> MPU_RASR_TEX_Pos)  & 0x03UL,
-                                                          (rasr >> MPU_RASR_SRD_Pos)  & 0xFFUL);
+                                                          (rasr >> MPU_RASR_TEX_Pos)  & 0x03UL);
     }
 }
 
@@ -137,6 +135,7 @@ static void _mpu_general_region_table_switch(rt_thread_t thread)
         ARM_MPU_ClrRegion(RT_MPU_FIRST_CONFIGURABLE_REGION + index);
     }
 
+#ifdef RT_MAL_USING_THREAD_STACK_PROTECT
     /* current thread stack is proteced? */
     if ((thread->setting.tables[0].addr == 0) && (thread->stack_size != 0))
     {
@@ -149,9 +148,11 @@ static void _mpu_general_region_table_switch(rt_thread_t thread)
                                                                     RT_MPU_REGION_SHAREABLE_ENABLE,
                                                                     RT_MPU_REGION_CACHEABLE_ENABLE,
                                                                     RT_MPU_REGION_BUFFERABLE_ENABLE,
-                                                                    RT_MPU_REGION_TEX_DISABLE,
-                                                                    0UL);
+                                                                    RT_MPU_REGION_TEX_DISABLE);
     }
+#else
+    ARM_MPU_ClrRegion(RT_MPU_THREAD_STACK_REGION);
+#endif
 
     for (index = 0; index < thread->setting.index + 1; index++)
     {

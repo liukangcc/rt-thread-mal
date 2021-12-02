@@ -183,8 +183,8 @@ rt_err_t rt_mpu_disable_protect_area(rt_thread_t thread, rt_uint8_t region);
 void rt_mpu_table_switch(rt_thread_t thread);
 rt_err_t rt_mpu_ops_register(struct rt_mpu_ops *ops);
 
-void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute));
-void rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute);
+void rt_mpu_exception_sethook(rt_thread_t thread, rt_err_t (*hook)(void* addr, rt_uint32_t attribute));
+rt_err_t rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute);
 
 #ifdef __cplusplus
 }

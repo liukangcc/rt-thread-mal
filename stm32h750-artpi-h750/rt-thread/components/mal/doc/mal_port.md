@@ -228,7 +228,11 @@ static void mpu_init(void)
 
      fault_type = SCB->CFSR;            /* memory manage faults status */
 
-     rt_mpu_exception_handler(rt_thread_self(), (void *)fault_address, fault_type);
+     if (rt_mpu_exception_handler(rt_thread_self(), (void *)fault_address, fault_type) == RT_EOK)
+     {
+         return;
+     }
+     while(1);
  }
  ```
 

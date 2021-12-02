@@ -367,16 +367,19 @@ void rt_mpu_table_switch(rt_thread_t thread)
  * @brief   This function will switch the MPU configuration table when the thread switch.
  *
  * @param   thread is the static thread object.
+ * 
+ * @return  Return the operation status. If the return value is RT_EOK, the function is successfully executed.
+ *          If the return value is any other values, it means this operation failed.
  */
-void rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute)
+rt_err_t rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute)
 {
     if (thread->mpu_hook)
     {
-        thread->mpu_hook(addr, attribute);
+        return thread->mpu_hook(addr, attribute);
     }
     else
     {
-        return;
+        return -RT_ERROR;
     }
 }
 
@@ -387,8 +390,12 @@ void rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attrib
  *
  * @param   hook is the mpu exception function.
  */
-void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute))
+void rt_mpu_exception_sethook(rt_thread_t thread, rt_err_t (*hook)(void* addr, rt_uint32_t attribute))
 {
+    if (thread->mpu_hook != RT_NULL)
+    {
+        LOG_W("thread: %s update mpu hook function", thread->name);
+    }
     thread->mpu_hook = hook;
 }
 

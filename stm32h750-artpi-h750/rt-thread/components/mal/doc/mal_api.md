@@ -174,7 +174,7 @@ rt_err_t rt_mpu_disable_protect_area(rt_thread_t thread, rt_uint8_t region);
 用户可以通过使用此接口 `rt_mpu_exception_sethook`，注册线程内存访问错误异常钩子函数：
 
 ```c
-void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute));
+void rt_mpu_exception_sethook(rt_thread_t thread, rt_err_t (*hook)(void* addr, rt_uint32_t attribute));
 ```
 
 | 参数   | 描述                                                         |
@@ -182,22 +182,6 @@ void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_ui
 | thread | 线程句柄。线程句柄由用户提供出来，并指向对应的线程控制块内存地址 |
 | hook   | 异常钩子函数                                                 |
 
-伪代码实现如下：
-
-```c
-static rt_thread_t thread = RT_NULL;
-
-static void thread1_mpu_exception(void* addr, rt_uint32_t attribute)
-{
-	...
-}
-
-/* register mpu exception for thread1 */
-static void register_hook()
-{
-    rt_mpu_exception_sethook(thread, thread1_mpu_exception);
-}
-```
 
 ### MAL 配置表切换
 
@@ -341,3 +325,6 @@ void rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attrib
 | thread    | 线程句柄。线程句柄由用户提供出来，并指向对应的线程控制块内存地址 |
 | addr      | 异常访问内存地址                                             |
 | attribute | 异常访问错误类型                                             |
+| 返回值 |                                              |
+| RT_EOK |  异常处理完成                                         |
+| OTHERS |  异常处理失败                                         |

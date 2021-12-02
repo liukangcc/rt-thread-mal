@@ -16,12 +16,12 @@ MAL （MPU Abstract Layer），即 mpu 抽象层。是 RT-Thread 自主研发的
 
 内存支持以下 6 种访问权限：
 
-- no access
-- privileged access only
-- unprivileged access read-only
-- full access
-- privileged access read-only
-- read-only access
+- no access：任何级别都没有读写权限
+- privileged access only：只有特权级具有读写权限
+- unprivileged access read-only：特权级有读写权限，非特权级只读
+- full access：任何级别都具有读写权限
+- privileged access read-only：特权级只读，非特权级没有读写权限
+- read-only access：任何级别都只有读权限
 
 ### 1.3 工作原理
 
@@ -124,11 +124,11 @@ MAL 移植分为两个层面的移植：架构层移植，和 BSP 层移植。
 
 架构层移植：架构移植文件位于 MAL 组件的 port 文件夹下，以 xxx_mal.c 命名，如 arm 架构移植文件命名为 arm_mal.c，适用于所有 arm 架构。
 
-- [不同 架构 移植 MAL 组件教程](doc/移植教程.md) 
+- [不同 架构 移植 MAL 组件教程](doc/mal_arch.md) 
 
 BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始化 MPU，完成 MPU 异常处理。
 
-- [不同 BSP 移植 MAL 组件教程](doc/移植教程.md) 
+- [不同 BSP 移植 MAL 组件教程](doc/mal_bsp.md) 
 
 ## 4.使用 MAL
 
@@ -137,6 +137,12 @@ BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始�
 在工程目录下，打开 `env` 工具，使能 MPU 抽象层：
 
 ![enable_mal](doc/figures/enable_mal.png)
+
+- Enable mpu abstraction layer：开启 mal 组件
+- Enable thread stack protect：开启线程堆栈保护，默认开启
+- Enable mpu abstraction layer debug log：开启 mal 组件 debug 日志
+- Set hardware used mpu regions number：设置硬件占用的 region 数目
+- Set mpu regions number：设置 mpu 总的 region 数目
 
 ### 4.2 示例：设置线程保护区域
 

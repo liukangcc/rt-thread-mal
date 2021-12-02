@@ -11,7 +11,6 @@
 #ifndef __MAL_H__
 #define __MAL_H__
 
-#include <rtthread.h>
 #include <rthw.h>
 #include <string.h>
 
@@ -25,11 +24,7 @@ extern "C" {
 #define RT_MAL_REVISION                     0L              /**< revise version number */
 
 #ifndef RT_MPU_ALIGN_SMALLEST_SIZE
-#define RT_MPU_ALIGN_SMALLEST_SIZE     32                    /* mpu region smallest size */
-#else
-#if RT_MPU_ALIGN_SMALLEST_SIZE > 32
-#define RT_MPU_ALIGN_SMALLEST_SIZE     32
-#endif
+#define RT_MPU_ALIGN_SMALLEST_SIZE     32                   /* mpu region smallest size */
 #endif
 
 #ifndef RT_MPU_THREAD_PROTECT_SIZE
@@ -39,7 +34,7 @@ extern "C" {
 /* region attribute 
 --------------------------------------------
 32 31 30 29 28 27 26 25 24 23 22 21 20 19 18
-|                   Reserved           |  |srd
+|                   Reserved           
 --------------------------------------------
 17 16 15 14 13 12 11 10          9          8          7 6 5 4        3 2 1 0
                      |bufferable |cacheable |shareable |tex  |execute |permission
@@ -62,9 +57,6 @@ extern "C" {
 
 #define REGION_BUFFERABLE_Pos          10U                               /* Region is bufferable */
 #define REGION_BUFFERABLE_Msk          (0x1U << REGION_BUFFERABLE_Pos)
-
-#define REGION_SRD_Pos                 11U                               /* Sub-region support */
-#define REGION_SRD_Msk                 (0xFFUL << REGION_SRD_Pos)
 
 /* access */
 #define RT_MPU_REGION_NO_ACCESS                          0x0U
@@ -94,18 +86,19 @@ extern "C" {
 #define RT_MPU_REGION_TEX_ENABLE                         0x1U
 #define RT_MPU_REGION_TEX_DISABLE                        0x0U
 
-/* sub_region */
-#define RT_MPU_SUB_REGION_DEFAULT                        0x0U
 
 #define RT_MPU_REGION_INVALID                            0x0U
 #define RT_MPU_REGION_VALID                              0x1U
 
-#define RT_MPU_FLASH_REGION                              0x0U            /* Flash memory region  */
-#define RT_MPU_INTERNAL_SRAM_REGION                      0x1U            /* Internal SRAM region */
-#define RT_MPU_EXTERNAL_SRAM_REGION                      0x2U            /* External SRAM region */
-#define RT_MPU_PRIPHERALS_REGION                         0x3U            /* Peripherals region   */
-#define RT_MPU_THREAD_STACK_REGION                       0x4U            /* Thread stack region  */
-#define RT_MPU_FIRST_CONFIGURABLE_REGION                 0x5U            /* User can configurable first region number */
+#ifndef RT_MPU_HW_USED_REGION
+#define RT_MPU_HW_USED_REGION                            0x0U
+#endif
+#ifdef  RT_MAL_USING_THREAD_STACK_PROTECT
+#define RT_MPU_THREAD_STACK_REGION                       (RT_MPU_HW_USED_REGION + 1)     /* Thread stack region  */
+#define RT_MPU_FIRST_CONFIGURABLE_REGION                 (RT_MPU_THREAD_STACK_REGION + 1)     /* User can configurable first region number */
+#else
+#define RT_MPU_FIRST_CONFIGURABLE_REGION                 (RT_MPU_HW_USED_REGION + 1)     /* User can configurable first region number */
+#endif
 
 #define RT_MPU_THREAD_PROTECT_MEM_NUM_REGION             0x2U            /* System protect area number */
 #define RT_MPU_THREAD_PROTECT_MEM_REGION_0               (RT_MPU_REGIONS_NUMBER - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION)
@@ -147,15 +140,13 @@ enum mpu_info_type {
 * \param cacheable          Region is cacheable, i.e. its value may be kept in cache.
 * \param bufferable         Region is bufferable, i.e. using write-back caching. Cacheable but non-bufferable regions use write-through policy.
 * \param type_extern        Type extension field, allows you to configure memory access type, for example strongly ordered, peripheral.
-* \param sub_region         Sub-region support.
 */ 
 rt_inline rt_uint32_t rt_mpu_region_attribute(rt_uint32_t access,
                                             rt_uint32_t execute,
                                             rt_uint32_t shareable,
                                             rt_uint32_t cacheable,
                                             rt_uint32_t bufferable,
-                                            rt_uint32_t type_extern,
-                                            rt_uint32_t sub_region)
+                                            rt_uint32_t type_extern)
 {
     rt_uint32_t attribute = 0;
 
@@ -164,8 +155,7 @@ rt_inline rt_uint32_t rt_mpu_region_attribute(rt_uint32_t access,
                 ((type_extern << REGION_TEX_Pos )        & REGION_TEX_Msk)        | \
                 ((shareable   << REGION_SHAREABLE_Pos )  & REGION_SHAREABLE_Msk)  | \
                 ((cacheable   << REGION_CACHEABLE_Pos )  & REGION_CACHEABLE_Msk)  | \
-                ((bufferable  << REGION_BUFFERABLE_Pos ) & REGION_BUFFERABLE_Msk) | \
-                ((sub_region  << REGION_SRD_Pos )        & REGION_SRD_Msk));
+                ((bufferable  << REGION_BUFFERABLE_Pos ) & REGION_BUFFERABLE_Msk));
 
     return attribute;
 };

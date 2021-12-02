@@ -15,9 +15,15 @@
 #define RT_MPU_SRAM_START_ADDR                          0x24000000
 #define RT_MPU_SRAM_SIZE                                (512UL * 1024)
 
+#define RT_MPU_FLASH_REGION                 0
+#define RT_MPU_INTERNAL_SRAM_REGION         1  
+#define RT_MPU_EXTERNAL_SRAM_REGION         2
+#define RT_MPU_PRIPHERALS_REGION            RT_MPU_HW_USED_REGION - 1
+
 struct rt_mal_region regions[4] = {0};
 static int rt_hw_mpu_init(void)
 {
+
     regions[RT_MPU_FLASH_REGION].region = RT_MPU_FLASH_REGION;
     regions[RT_MPU_FLASH_REGION].addr = RT_MPU_FLASH_START_ADDR, 
     regions[RT_MPU_FLASH_REGION].size = RT_MPU_FLASH_SIZE;
@@ -26,8 +32,7 @@ static int rt_hw_mpu_init(void)
                                                                      RT_MPU_REGION_SHAREABLE_ENABLE,       
                                                                      RT_MPU_REGION_CACHEABLE_ENABLE,
                                                                      RT_MPU_REGION_BUFFERABLE_ENABLE,
-                                                                     RT_MPU_REGION_TEX_DISABLE,
-                                                                     0);
+                                                                     RT_MPU_REGION_TEX_DISABLE);
 
     regions[RT_MPU_INTERNAL_SRAM_REGION].region = RT_MPU_INTERNAL_SRAM_REGION;
     regions[RT_MPU_INTERNAL_SRAM_REGION].addr = RT_MPU_SRAM_START_ADDR, 
@@ -37,24 +42,13 @@ static int rt_hw_mpu_init(void)
                                                                      RT_MPU_REGION_SHAREABLE_ENABLE,       
                                                                      RT_MPU_REGION_CACHEABLE_ENABLE,
                                                                      RT_MPU_REGION_BUFFERABLE_ENABLE,
-                                                                     RT_MPU_REGION_TEX_DISABLE,
-                                                                     0);
+                                                                     RT_MPU_REGION_TEX_DISABLE);
 
     regions[RT_MPU_EXTERNAL_SRAM_REGION].region = RT_MPU_EXTERNAL_SRAM_REGION;
     regions[RT_MPU_EXTERNAL_SRAM_REGION].addr = 0, 
     regions[RT_MPU_EXTERNAL_SRAM_REGION].size = 0;
     regions[RT_MPU_EXTERNAL_SRAM_REGION].attribute = 0;  
     
-    regions[RT_MPU_PRIPHERALS_REGION].region = RT_MPU_PRIPHERALS_REGION;
-    regions[RT_MPU_PRIPHERALS_REGION].addr = RT_MPU_PERIPHERALS_START_ADDRESS, 
-    regions[RT_MPU_PRIPHERALS_REGION].size = RT_MPU_PERIPHERALS_END_ADDRESS - RT_MPU_PERIPHERALS_START_ADDRESS;
-    regions[RT_MPU_PRIPHERALS_REGION].attribute = rt_mpu_region_attribute(RT_MPU_REGION_PRIVILEGED_RW, 
-                                                                     RT_MPU_REGION_EXECUTE_ENABLE, 
-                                                                     RT_MPU_REGION_SHAREABLE_ENABLE,       
-                                                                     RT_MPU_REGION_CACHEABLE_ENABLE,
-                                                                     RT_MPU_REGION_BUFFERABLE_ENABLE,
-                                                                     RT_MPU_REGION_TEX_DISABLE,
-                                                                     0);
 
     rt_mpu_init(regions);
     

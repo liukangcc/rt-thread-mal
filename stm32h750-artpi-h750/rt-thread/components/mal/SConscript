@@ -8,11 +8,11 @@ path  = [cwd]
 path += [cwd + '/inc']
 
 if GetDepend('ARCH_ARM'):
-    src += Glob('port/arm/*.c')
-    path += [cwd + '/port/arm']
+    src += Glob('arch/arm/*.c')
+    path += [cwd + '/arch/arm']
 elif GetDepend('ARCH_riscv'):
-    src += Glob('port/riscv/*.c')
-    path += [cwd + '/port/riscv']
+    src += Glob('arch/riscv/*.c')
+    path += [cwd + '/arch/riscv']
 
 group = DefineGroup('Mal', src, depend = ['RT_USING_MAL'], CPPPATH = path)
 

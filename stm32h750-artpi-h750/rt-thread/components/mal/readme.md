@@ -106,7 +106,7 @@ rt_err_t rt_mpu_disable_protect_area(rt_thread_t thread, rt_uint8_t region);
 rt_err_t rt_mpu_insert(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute, rt_uint8_t region);
 rt_err_t rt_mpu_get_info(rt_thread_t thread, rt_uint32_t type, void *arg);
 
-void rt_mpu_exception_sethook(rt_thread_t thread, void (*hook)(void* addr, rt_uint32_t attribute));
+void rt_mpu_exception_sethook(rt_thread_t thread, rt_err_t (*hook)(void* addr, rt_uint32_t attribute));
 
 void rt_mpu_table_switch(rt_thread_t thread);
 
@@ -115,7 +115,7 @@ rt_err_t rt_mpu_ops_register(struct rt_mpu_ops *ops);
 
 /* 用于 BSP 移植调用的 API */
 rt_err_t rt_mpu_init(struct rt_mal_region *tables);
-void rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute);
+rt_err_t rt_mpu_exception_handler(rt_thread_t thread, void* addr, rt_uint32_t attribute);
 ```
 
 ## 3.移植 MAL
@@ -142,52 +142,64 @@ BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始�
 
 设置一块内存区域，只有当前线程具有访问权限，其他线程禁止访问。
 
-   ```c
-   #define THREAD_MEMORY_SIZE 1024
-   uint8_t protect_memory[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
-   
-   static void thread1_entry(void *param)
-   {
-      while (1)
-      {
-          protect_memory[0] = 1; /* mpu1 thread will trigger memmory fault */
-          rt_thread_mdelay(1000);
-      }
-   }
-   
-   static void mpu1_thread_handle(void *addr, rt_uint32_t attribute)
-   {
-   	rt_kprintf("error memory addr: %p\n", addr);
-   }
-   
-   int main(void)
-   {
-       /* set LED0 pin mode to output */
-       rt_pin_mode(LED0_PIN, PIN_MODE_OUTPUT);
-       mpu_init();
-       rt_thread_init(&tid, "mpu", thread1_entry, RT_NULL, thread_stack, THREAD_MEMORY_SIZE, THREAD_PRIORITY, 20);
-       {
-           rt_mpu_enable_protect_area(&tid, protect_memory, THREAD_MEMORY_SIZE, RT_MPU_REGION_PRIVILEGED_RW); /* 设置保护区域 */
-           rt_thread_startup(&tid);
-       }
-   
-       rt_thread_init(&tid1, "mpu1", thread1_entry, RT_NULL, thread1_stack, THREAD_MEMORY_SIZE, THREAD_PRIORITY, 20);
-       {
-           rt_mpu_exception_sethook(&tid1, mpu1_thread_handle);
-           rt_thread_startup(&tid1);
-       }
-   
-       while (1)
-       {
-           rt_pin_write(LED0_PIN, PIN_HIGH);
-           rt_thread_mdelay(500);
-           rt_pin_write(LED0_PIN, PIN_LOW);
-           rt_thread_mdelay(500);
-       }
-   }
-   ```
+```c
+#include <rtthread.h>
+#include <rtdevice.h>
+#include <board.h>
 
-当线程 `mpu1` 访问内存区域 `protect_memory` 时，就会触发内存异常中断服务。如果该线程注册了 mpu 异常回调函数，mal 组件层就会调用该函数。
+#ifdef RT_USING_MAL
+#include <mal.h>
+#endif
+
+#define THREAD_PRIORITY    25
+#define THREAD_MEMORY_SIZE 1024
+uint8_t thread_stack[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
+uint8_t thread1_stack[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
+uint8_t protect_memory[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
+struct rt_thread tid = {0};
+struct rt_thread tid1 = {0};
+
+static void thread1_entry(void *param)
+{
+    while (1)
+    {
+        protect_memory[0] = 1;
+        rt_thread_mdelay(1000);
+    }
+}
+
+static rt_err_t mpu1_thread_handle(void *addr, rt_uint32_t attribute)
+{
+    rt_kprintf("error memory addr: %p\n", addr);
+
+    rt_thread_detach(rt_thread_self());
+    rt_schedule();
+
+    return RT_EOK;
+}
+
+int main(void)
+{
+    rt_thread_init(&tid, "mpu", thread1_entry, RT_NULL, thread_stack, THREAD_MEMORY_SIZE, THREAD_PRIORITY, 20);
+    {
+        rt_mpu_enable_protect_area(&tid, protect_memory, THREAD_MEMORY_SIZE, RT_MPU_REGION_PRIVILEGED_RW); /* 设置保护区域 */
+        rt_thread_startup(&tid);
+    }
+
+    rt_thread_init(&tid1, "mpu1", thread1_entry, RT_NULL, thread1_stack, THREAD_MEMORY_SIZE, THREAD_PRIORITY, 20);
+    {
+        rt_mpu_exception_sethook(&tid1, mpu1_thread_handle);
+        rt_thread_startup(&tid1);
+    }
+
+    while (1)
+    {
+        rt_thread_mdelay(500);
+    }
+}
+```
+
+当线程 `mpu1` 访问内存区域 `protect_memory` 时，就会触发内存异常中断服务。如果该线程注册了 mpu 异常回调函数，mal 组件层就会调用该函数，在线程 mpu 异常钩子函数中，杀掉 mpu1 线程，使系统能够继续正常运行。
 
 ![image-20211130110741512](doc/figures/handle.png)
 
@@ -196,28 +208,41 @@ BSP 层移植：BSP 移植文件位于具体的 bsp 中，主要工作是初始�
 只针对当前线程，禁止对某块区域进行读写操作：
 
 ```c
-#define THREAD_MEMORY_SIZE 1024
+#include <rtthread.h>
+#include <rtdevice.h>
+#include <board.h>
+
+#ifdef RT_USING_MAL
+#include <mal.h>
+#endif
+
+#define THREAD_PRIORITY         25
+#define THREAD_MEMORY_SIZE      1024
+uint8_t thread_stack[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
 uint8_t protect_memory[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
+struct rt_thread tid = {0};
 
 static void thread1_entry(void *param)
 {
    while (1)
    {
-       protect_memory[0] = 1; /* mpu 线程访问受限区域，触发异常 */
-       rt_thread_mdelay(1000);
+        protect_memory[0] = 1;
+        rt_thread_mdelay(1000);
    }
 }
 
-static void mpu_thread_handle(void *addr, rt_uint32_t attribute)
+static rt_err_t mpu_thread_handle(void *addr, rt_uint32_t attribute)
 {
-	rt_kprintf("error memory addr: %p\n", addr);
+    rt_kprintf("error memory addr: %p\n", addr);
+
+    rt_thread_detach(rt_thread_self());
+    rt_schedule();
+
+    return RT_EOK;
 }
 
 int main(void)
 {
-    /* set LED0 pin mode to output */
-    rt_pin_mode(LED0_PIN, PIN_MODE_OUTPUT);
-    mpu_init();
     rt_thread_init(&tid, "mpu", thread1_entry, RT_NULL, thread_stack, THREAD_MEMORY_SIZE, THREAD_PRIORITY, 20);
     {
         rt_mpu_attach(&tid, protect_memory, THREAD_MEMORY_SIZE, RT_MPU_REGION_NO_ACCESS);
@@ -227,17 +252,11 @@ int main(void)
 
     while (1)
     {
-        rt_pin_write(LED0_PIN, PIN_HIGH);
-        rt_thread_mdelay(500);
-        rt_pin_write(LED0_PIN, PIN_LOW);
         rt_thread_mdelay(500);
     }
 }
 ```
 
-当线程 `mpu` 访问内存区域 `protect_memory` 时，就会触发 mpu 异常。
+当线程 `mpu` 访问内存区域 `protect_memory` 时，就会触发 mpu 异常。在线程 mpu 异常钩子函数中，杀掉 mpu 线程，使系统能够继续正常运行：
 
-
-
-
-
+![image-20211130110741512](doc/figures/handle2.png)

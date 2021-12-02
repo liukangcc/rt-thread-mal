@@ -102,9 +102,12 @@ void MemManage_Handler(void)
 
    fault_type = SCB->CFSR;            /* memory manage faults status */
     
-   rt_mpu_exception_handler(rt_thread_self(), (void *)fault_address, fault_type);
+   if (rt_mpu_exception_handler(rt_thread_self(), (void *)fault_address, fault_type) == RT_EOK) /* exception handling succeeded */
+   {
+       return;
+   }
 
-    while (1);
+   while (1);
 }
 
 #endif

@@ -705,7 +705,7 @@ struct rt_thread
     /* memory protect unit if present */
 #ifdef RT_USING_MAL
     struct rt_mal setting;                            /**< mpu tables setting */
-    void (*mpu_hook)(void* addr, rt_uint32_t attribute);
+    rt_err_t (*mpu_hook)(void* addr, rt_uint32_t attribute);
 #endif
 
     rt_ubase_t user_data;                             /**< private user data beyond this thread */

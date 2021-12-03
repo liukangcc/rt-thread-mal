@@ -608,7 +608,6 @@ struct rt_cpu
 
 struct rt_mal_region
 {
-    rt_uint8_t region;
     rt_uint32_t addr;
     rt_uint32_t size;
     rt_uint32_t attribute;

@@ -21,7 +21,10 @@
 
 #ifdef RT_USING_MAL
 
-static struct mpu_protect_regions mpu_protect_areas[RT_MPU_THREAD_PROTECT_MEM_NUM_REGION] = {0};
+#ifdef RT_MPU_PROTECT_AREA_REGIONS
+static struct mpu_protect_regions mpu_protect_areas[RT_MPU_PROTECT_AREA_REGIONS] = {0};
+#endif
+
 static rt_uint8_t mpu_protect_area_num = 0;
 static struct rt_mpu_ops* mpu_ops = RT_NULL;
 static rt_uint8_t init_ok = 0;
@@ -71,10 +74,9 @@ rt_err_t rt_mpu_attach(rt_thread_t thread, void* addr, size_t size, rt_uint32_t 
         return -RT_ERROR;
     }
 
-    thread->setting.tables[thread->setting.index + 1].region    = thread->setting.index + RT_MPU_FIRST_CONFIGURABLE_REGION;
-    thread->setting.tables[thread->setting.index + 1].addr      = (rt_uint32_t)addr;
-    thread->setting.tables[thread->setting.index + 1].size      = size;
-    thread->setting.tables[thread->setting.index + 1].attribute = attribute;
+    thread->setting.tables[thread->setting.index].addr      = (rt_uint32_t)addr;
+    thread->setting.tables[thread->setting.index].size      = size;
+    thread->setting.tables[thread->setting.index].attribute = attribute;
     LOG_D("thread: %s. attach region: %d success.", thread->name, thread->setting.tables[thread->setting.index + 1].region);
     thread->setting.index += 1;
     return RT_EOK;
@@ -104,16 +106,15 @@ rt_err_t rt_mpu_attach_table(rt_thread_t thread, struct mpu_regions *regions)
     {
         if (regions[i].size > 0)
         {
-            thread->setting.tables[thread->setting.index + 1].region    = index + RT_MPU_FIRST_CONFIGURABLE_REGION;
-            thread->setting.tables[thread->setting.index + 1].addr      = (rt_uint32_t)regions[i].addr;
-            thread->setting.tables[thread->setting.index + 1].size      = (rt_uint32_t)regions[i].size;
-            thread->setting.tables[thread->setting.index + 1].attribute = regions[i].attribute;
+            thread->setting.tables[thread->setting.index].addr      = (rt_uint32_t)regions[i].addr;
+            thread->setting.tables[thread->setting.index].size      = (rt_uint32_t)regions[i].size;
+            thread->setting.tables[thread->setting.index].attribute = regions[i].attribute;
             thread->setting.index += 1;
         }
         else
         {
             /* invalidate the region */
-            rt_memset(&thread->setting.tables[thread->setting.index + 1], 0x00, sizeof(thread->setting.tables[thread->setting.index]));
+            rt_memset(&thread->setting.tables[thread->setting.index], 0x00, sizeof(thread->setting.tables[thread->setting.index]));
         }
         i += 1;
     }
@@ -135,21 +136,21 @@ rt_err_t rt_mpu_delete(rt_thread_t thread, rt_uint8_t region)
 {
     rt_uint8_t index = 0;
 
-    if (region > RT_MPU_NUM_CONFIGURABLE_REGION || region <= RT_MPU_THREAD_STACK_REGION) 
-    {
-        return -RT_ERROR;
-    }
-    
-    if (region > thread->setting.index + RT_MPU_THREAD_STACK_REGION)
+    if (region > RT_MPU_NUM_CONFIGURABLE_REGION || region < RT_MPU_FIRST_CONFIGURABLE_REGION - 1) 
     {
         return -RT_ERROR;
     }
 
-    index = region - RT_MPU_THREAD_STACK_REGION;
-    for (; index < RT_MPU_THREAD_PROTECT_MEM_REGION_0; index++)
+    if (region > thread->setting.index + RT_MPU_FIRST_CONFIGURABLE_REGION)
     {
-        thread->setting.tables[index].addr = thread->setting.tables[index + 1].addr;
-        thread->setting.tables[index].size = thread->setting.tables[index + 1].size;
+        return -RT_ERROR;
+    }
+
+    index = region - RT_MPU_FIRST_CONFIGURABLE_REGION;
+    for (; index < RT_MPU_LAST_CONFIGURABLE_REGION; index++)
+    {
+        thread->setting.tables[index].addr      = thread->setting.tables[index + 1].addr;
+        thread->setting.tables[index].size      = thread->setting.tables[index + 1].size;
         thread->setting.tables[index].attribute = thread->setting.tables[index + 1].attribute;
     }
 
@@ -179,7 +180,7 @@ rt_err_t rt_mpu_refresh(rt_thread_t thread, void *addr, size_t size, rt_uint32_t
 {
     rt_uint8_t index = 0;
 
-    if (region > RT_MPU_NUM_CONFIGURABLE_REGION || region < RT_MPU_THREAD_STACK_REGION) 
+    if (region > RT_MPU_NUM_CONFIGURABLE_REGION || region < RT_MPU_FIRST_CONFIGURABLE_REGION) 
     {
         return -RT_ERROR;
     }
@@ -191,7 +192,6 @@ rt_err_t rt_mpu_refresh(rt_thread_t thread, void *addr, size_t size, rt_uint32_t
 
     index = region - RT_MPU_FIRST_CONFIGURABLE_REGION;
 
-    thread->setting.tables[index].region    = region;
     thread->setting.tables[index].addr      = (rt_uint32_t)addr;
     thread->setting.tables[index].size      = (rt_uint32_t)size;
     thread->setting.tables[index].attribute = attribute;
@@ -218,9 +218,8 @@ rt_err_t rt_mpu_refresh(rt_thread_t thread, void *addr, size_t size, rt_uint32_t
 rt_err_t rt_mpu_insert(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute, rt_uint8_t region)
 {
     rt_uint8_t index = 0;
-    struct rt_mal s_setting;
 
-    if (region > RT_MPU_NUM_CONFIGURABLE_REGION || region <= RT_MPU_THREAD_STACK_REGION) 
+    if (region > RT_MPU_NUM_CONFIGURABLE_REGION || region < RT_MPU_FIRST_CONFIGURABLE_REGION) 
     {
         return -RT_ERROR;
     }
@@ -235,27 +234,22 @@ rt_err_t rt_mpu_insert(rt_thread_t thread, void *addr, size_t size, rt_uint32_t 
         return -RT_ERROR;
     }
 
-    index = region - RT_MPU_THREAD_STACK_REGION;
+    index = region - RT_MPU_FIRST_CONFIGURABLE_REGION;
 
-    for (int i = 0; i < RT_MPU_LAST_CONFIGURABLE_REGION; i++)
+    for(int i = 0; i < RT_MPU_NUM_CONFIGURABLE_REGION; i++)
     {
-        if (i == region)
+        if (index == i)
         {
-            s_setting.tables[index + 1].region     = region;
-            s_setting.tables[index + 1].addr       = (rt_uint32_t)addr;
-            s_setting.tables[index + 1].size       = (rt_uint32_t)size;
-            s_setting.tables[index + 1].attribute  = attribute;
-        }
-        if (i > region)
-        {
-            rt_memcpy(&s_setting.tables[i + 1], &thread->setting.tables[i], sizeof(thread->setting.tables[i]));
-        }
-        if ( i < region)
-        {
-            rt_memcpy(&s_setting.tables[i], &thread->setting.tables[i], sizeof(thread->setting.tables[i]));
+            for (int j = RT_MPU_NUM_CONFIGURABLE_REGION-1; j > index; j--)
+            {
+                rt_memcpy(&thread->setting.tables[j], &thread->setting.tables[j - 1], sizeof(thread->setting.tables[j]));
+            }
+            thread->setting.tables[i].addr = (rt_uint32_t)addr;
+            thread->setting.tables[i].size = (rt_uint32_t)size;
+            thread->setting.tables[i].attribute = attribute;
         }
     }
-    
+
     return RT_EOK;
 }
 
@@ -275,14 +269,14 @@ rt_err_t rt_mpu_insert(rt_thread_t thread, void *addr, size_t size, rt_uint32_t 
  */
 rt_err_t rt_mpu_enable_protect_area(rt_thread_t thread, void *addr, size_t size, rt_uint32_t attribute)
 {
-    if (mpu_protect_area_num >= RT_MPU_THREAD_PROTECT_MEM_NUM_REGION)
+    if (mpu_protect_area_num >= RT_MPU_PROTECT_AREA_REGIONS)
     {
         LOG_E("no protect area enable");
         return -RT_ERROR;
     }
 
     mpu_protect_areas[mpu_protect_area_num].thread           = thread;
-    mpu_protect_areas[mpu_protect_area_num].tables.region    = RT_MPU_THREAD_PROTECT_MEM_REGION_0 + mpu_protect_area_num;
+
     mpu_protect_areas[mpu_protect_area_num].tables.addr      = (rt_uint32_t)addr;
     mpu_protect_areas[mpu_protect_area_num].tables.size      = (rt_uint32_t)size;
     mpu_protect_areas[mpu_protect_area_num].tables.attribute = attribute;
@@ -313,7 +307,7 @@ rt_err_t rt_mpu_disable_protect_area(rt_thread_t thread, rt_uint8_t region)
 
     for (index = 0; index < mpu_protect_area_num; index++)
     {
-        if ((mpu_protect_areas[index].thread == thread) && (mpu_protect_areas[index].tables.region == region))
+        if ((mpu_protect_areas[index].thread == thread) && ((index + RT_MPU_FIRST_PROTECT_AREA_REGION) == region))
         {
             rt_memset(&mpu_protect_areas[index], 0x00, sizeof(mpu_protect_areas[index]));
             mpu_protect_area_num -= 1;

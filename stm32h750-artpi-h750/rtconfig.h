@@ -125,8 +125,9 @@
 /* MPU abstraction layer */
 
 #define RT_USING_MAL
-#define RT_MAL_USING_THREAD_STACK_PROTECT
-#define RT_MAL_HW_USED_REGIONS 3
+#define RT_MPU_USING_THREAD_STACK_PROTECT
+#define RT_MPU_HW_USED_REGIONS 4
+#define RT_MPU_PROTECT_AREA_REGIONS 2
 #define RT_MPU_REGIONS_NUMBER 16
 
 /* Utilities */
@@ -162,12 +163,18 @@
 /* u8g2: a monochrome graphic library */
 
 
+/* PainterEngine: A cross-platform graphics application framework written in C language */
+
+
 /* tools packages */
 
 
 /* system packages */
 
 /* acceleration: Assembly language or algorithmic acceleration packages */
+
+
+/* CMSIS: ARM Cortex-M Microcontroller Software Interface Standard */
 
 
 /* Micrium: Micrium software products porting for RT-Thread */

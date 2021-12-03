@@ -9,10 +9,9 @@
 #define THREAD_PRIORITY    25
 #define THREAD_MEMORY_SIZE 1024
 uint8_t thread_stack[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
-uint8_t thread1_stack[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
-uint8_t protect_memory[THREAD_MEMORY_SIZE] __attribute__((aligned(THREAD_MEMORY_SIZE)));
+uint8_t protect_memory[32] __attribute__((aligned(32)));
+
 struct rt_thread tid = {0};
-struct rt_thread tid1 = {0};
 
 static void thread1_entry(void *param)
 {
@@ -37,14 +36,9 @@ int main(void)
 {
     rt_thread_init(&tid, "mpu", thread1_entry, RT_NULL, thread_stack, THREAD_MEMORY_SIZE, THREAD_PRIORITY, 20);
     {
-        rt_mpu_enable_protect_area(&tid, protect_memory, THREAD_MEMORY_SIZE, RT_MPU_REGION_PRIVILEGED_RW); /* 设置保护区域 */
+        rt_mpu_attach(&tid, protect_memory, 32, RT_MPU_REGION_PRIVILEGED_RO);
+        rt_mpu_exception_sethook(&tid, mpu1_thread_handle);
         rt_thread_startup(&tid);
-    }
-
-    rt_thread_init(&tid1, "mpu1", thread1_entry, RT_NULL, thread1_stack, THREAD_MEMORY_SIZE, THREAD_PRIORITY, 20);
-    {
-        rt_mpu_exception_sethook(&tid1, mpu1_thread_handle);
-        rt_thread_startup(&tid1);
     }
 
     while (1)

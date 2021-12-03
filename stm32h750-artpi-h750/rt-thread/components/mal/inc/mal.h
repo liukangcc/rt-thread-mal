@@ -90,22 +90,20 @@ extern "C" {
 #define RT_MPU_REGION_INVALID                            0x0U
 #define RT_MPU_REGION_VALID                              0x1U
 
-#ifndef RT_MPU_HW_USED_REGION
-#define RT_MPU_HW_USED_REGION                            0x0U
+#ifndef RT_MPU_HW_USED_REGIONS
+#define RT_MPU_HW_USED_REGIONS                           0x0U
 #endif
-#ifdef  RT_MAL_USING_THREAD_STACK_PROTECT
-#define RT_MPU_THREAD_STACK_REGION                       (RT_MPU_HW_USED_REGION + 1)     /* Thread stack region  */
+
+#ifdef  RT_MPU_USING_THREAD_STACK_PROTECT
+#define RT_MPU_THREAD_STACK_REGION                       (RT_MPU_HW_USED_REGIONS)             /* Thread stack region  */
 #define RT_MPU_FIRST_CONFIGURABLE_REGION                 (RT_MPU_THREAD_STACK_REGION + 1)     /* User can configurable first region number */
 #else
-#define RT_MPU_FIRST_CONFIGURABLE_REGION                 (RT_MPU_HW_USED_REGION + 1)     /* User can configurable first region number */
+#define RT_MPU_FIRST_CONFIGURABLE_REGION                 (RT_MPU_HW_USED_REGIONS + 1)          /* User can configurable first region number */
 #endif
 
-#define RT_MPU_THREAD_PROTECT_MEM_NUM_REGION             0x2U            /* System protect area number */
-#define RT_MPU_THREAD_PROTECT_MEM_REGION_0               (RT_MPU_REGIONS_NUMBER - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION)
-#define RT_MPU_THREAD_PROTECT_MEM_REGION_1               (RT_MPU_REGIONS_NUMBER - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION + 1)
-
-#define RT_MPU_NUM_CONFIGURABLE_REGION                   (RT_MPU_REGIONS_NUMBER - RT_MPU_FIRST_CONFIGURABLE_REGION - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION) /* number of regions that can be configured */
-#define RT_MPU_LAST_CONFIGURABLE_REGION                  (RT_MPU_REGIONS_NUMBER - RT_MPU_THREAD_PROTECT_MEM_NUM_REGION - 1)
+#define RT_MPU_FIRST_PROTECT_AREA_REGION   (RT_MPU_REGIONS_NUMBER - RT_MPU_HW_USED_REGIONS)
+#define RT_MPU_NUM_CONFIGURABLE_REGION     (RT_MPU_REGIONS_NUMBER - RT_MPU_FIRST_CONFIGURABLE_REGION - RT_MPU_HW_USED_REGIONS) /* number of regions that can be configured */
+#define RT_MPU_LAST_CONFIGURABLE_REGION    (RT_MPU_REGIONS_NUMBER - RT_MPU_HW_USED_REGIONS - 1)
 
 struct mpu_regions
 {

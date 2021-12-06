@@ -140,7 +140,11 @@ static void _mpu_general_region_table_switch(rt_thread_t thread)
                                         RT_MPU_REGION_BUFFERABLE_ENABLE,
                                         RT_MPU_REGION_TEX_DISABLE);
     align_size = _mpu_align_min(RT_MPU_THREAD_PROTECT_SIZE);
+#ifdef ARCH_CPU_STACK_GROWS_UPWARD
+    align_addr = (rt_uint32_t)RT_ALIGN_DOWN((rt_uint32_t)thread->stack_addr + thread->stack_size - 32,  1 << (align_size + 1));
+#else
     align_addr = (rt_uint32_t)RT_ALIGN_DOWN((rt_uint32_t)thread->stack_addr,  1 << (align_size + 1));
+#endif
     rabr = ARM_MPU_RBAR(RT_MPU_THREAD_STACK_REGION, align_addr);
     rasr = _mpu_rasr_value(attribute, align_size);
     ARM_MPU_SetRegion(rabr, rasr);
